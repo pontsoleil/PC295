@@ -139,14 +139,14 @@ CR=$( printf '\015')               # Carridge Return
 ######################################################################
 
 # === Open the CSV data source ===================================== #
-grep '' ${file:+"$file"}                                             |
+grep '' ${file:+"$file"}                                             | tee log/step0a |
 #                                                                    #
 # === Remove <CR> at the end of every line ========================= #
-sed "s/$CR\$//"                                                      |
+sed "s/$CR\$//"                                                      | tee log/step0b |
 #                                                                    #
 # === Escape DQs as value ========================================== #
 #     (However '""'s meaning null are also escape for the moment)    #
-sed 's/""/'$SO'/g'                                                   |
+sed 's/""/'$SO'/g'                                                   | tee log/step0c |
 #                                                                    #
 # === Convert <0x0A>s as value into "\n" =========================== #
 #     (It's possible to distinguish it from the ones as CSV record   #
@@ -166,37 +166,37 @@ awk '                                                                #
       }                                                              #
     }                                                                #
   }                                                                  #
-'                                                                    |
+'                                                                    | tee log/step1 |
 #                                                                    #
 # === Mark record separators of CSV with RS after it in advance ==== #
-sed "s/\$/$LFs$RS/"                                                  |
+sed "s/\$/$LFs$RS/"                                                  | tee log/step2 |
 #                                                                    #
 # === Split fields which is quoted with DQ into individual lines === #
 #     (Also remove spaces behind and after the DQ field)             #
 # (1/3)Split the DQ fields from the top to NF-1                      #
-sed 's/['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*,/\1'"$LFs$US$LFs"'/g'       |
+sed 's/['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*,/\1'"$LFs$US$LFs"'/g'       | tee log/step3 |
 # (2/3)Split the DQ fields at the end (NF)                           #
-sed 's/,['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*$/'"$LFs$US$LFs"'\1/g'      |
+sed 's/,['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*$/'"$LFs$US$LFs"'\1/g'      | tee log/step4 |
 # (3/3)Remove spaces behind and after the single DQ field in line    #
-sed 's/^['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*$/\1/g'                     |
+sed 's/^['"$HT"' ]*\("[^"]*"\)['"$HT"' ]*$/\1/g'                     | tee log/step5 |
 #                                                                    #
 # === Split non-quoted fields into individual lines ================ #
 #     (It is simple, only convert "," to <0x0A> on non-quoted lines) #
-sed '/['$RS'"]/!s/,/'"$LFs$US$LFs"'/g'                               |
+sed '/['$RS'"]/!s/,/'"$LFs$US$LFs"'/g'                               | tee log/step6|
 #                                                                    #
 # === Unquote DQ-quoted field ====================================== #
 #     (It is also simple, only remove DQs. Because the DQs as value  #
 #      are all escaped now.)                                         #
-tr -d '"'                                                            |
+tr -d '"'                                                            | tee log/step7 |
 #                                                                    #
 # === Unescape the DQs as value ==================================== #
 #     (However '""'s meaning null are also unescaped)                #
 # (1/3)Unescape all '""'s                                            #
-sed 's/'$SO'/""/g'                                                   |
+sed 's/'$SO'/""/g'                                                   | tee log/step8 |
 # (2/3)Convert only '""'s mean null into empty lines                 #
-sed 's/^['"$HT"' ]*""['"$HT"' ]*$//'                                 |
+sed 's/^['"$HT"' ]*""['"$HT"' ]*$//'                                 | tee log/step9 |
 # (3/3)Convert the left '""'s, which are as value, into '"'s         #
-sed 's/""/"/g'                                                       |
+sed 's/""/"/g'                                                       | tee log/step10 |
 #                                                                    #
 # === Assign the pair number of line and field on the head of line = #
 awk '                                                                #
@@ -214,12 +214,12 @@ awk '                                                                #
       }                                                              #
     }                                                                #
   }                                                                  #
-'                                                                    |
+'                                                                    | tee log/step11 |
 #                                                                    #
 # === Convert escaped <CR>s as value (SI) into the substitute str. = #
 if [ "_$bsesc" != '_\\' ]; then                                      #
   sed 's/\\/'"$bsesc"'/g'                                            #
 else                                                                 #
   cat                                                                #
-fi                                                                   |
+fi                                                                   | tee log/step12 
 sed 's/'"$SI"'/'"$optlf"'/g'
