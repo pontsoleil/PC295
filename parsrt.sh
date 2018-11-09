@@ -279,5 +279,4 @@ else                                                                  #
 fi                                                                    | tee log/step15 |
 sed 's/'"$SI"'/'"$optlf"'/g'
 
-set -x
 exec 2>/dev/stderr

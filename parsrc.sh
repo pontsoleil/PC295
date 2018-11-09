@@ -252,5 +252,4 @@ else                                                                 #
 fi                                                                   | tee log/step11 |
 sed 's/'"$NL"'/'"$optlf"'/g'
 
-set -x
 exec 2>/dev/stderr
