@@ -56,6 +56,10 @@ type command >/dev/null 2>&1 && type getconf >/dev/null 2>&1 &&
 export PATH="$(command -p getconf PATH)${PATH+:}${PATH-}"
 export UNIX_STD=2003  # to make HP-UX conform to POSIX
 
+# === Log ============================================================
+exec 2>log/logfile.$$.txt
+set -x
+
 # === Usage printing function ========================================
 print_usage_and_exit () {
   cat <<-USAGE 1>&2
@@ -136,19 +140,19 @@ case "$file" in ''|-|/*|./*|../*) :;; *) file="./$file";; esac
 ######################################################################
 
 # === Define some chrs. to escape some special chrs. temporarily =====
-SCT=$(printf '\016') # タグ開始端(候補)エスケープ用文字
-ECT=$(printf '\017') # タグ終端(候補)エスケープ用文字
-PRO=$(printf '\020') # 属性行開始識別文字
-SCS=$(printf '\021') # 一重引用符開始端(候補)エスケープ用文字
-ECS=$(printf '\022') # 一重引用符終端(候補)エスケープ用文字
-SCD=$(printf '\023') # 二重引用符開始端(候補)エスケープ用文字
-ECD=$(printf '\024') # 二重引用符終端(候補)エスケープ用文字
-SPC=$(printf '\025') # 引用符内スペースのエスケープ用文字
-TAB=$(printf '\026') # 引用符内タブのエスケープ用文字
-GT=$( printf '\027') # 引用符内">"のエスケープ用文字
-LT=$( printf '\030') # 引用符内"<"のエスケープ用文字
-SLS=$(printf '\031') # 引用符内"/"のエスケープ用文字
-LF=$( printf '\177') # 改行(タグ内の引用符外は除く)のエスケープ用文字
+SCT=$( printf '\016') # タグ開始端(候補)エスケープ用文字
+ECT=$( printf '\017') # タグ終端(候補)エスケープ用文字
+PRO=$( printf '\020') # 属性行開始識別文字
+SCS=$( printf '\021') # 一重引用符開始端(候補)エスケープ用文字
+ECS=$( printf '\022') # 一重引用符終端(候補)エスケープ用文字
+SCD=$( printf '\023') # 二重引用符開始端(候補)エスケープ用文字
+ECD=$( printf '\024') # 二重引用符終端(候補)エスケープ用文字
+SPC=$( printf '\025') # 引用符内スペースのエスケープ用文字
+TAB=$( printf '\026') # 引用符内タブのエスケープ用文字
+GT=$( printf '\027')  # 引用符内">"のエスケープ用文字
+LT=$( printf '\030')  # 引用符内"<"のエスケープ用文字
+SLS=$( printf '\031') # 引用符内"/"のエスケープ用文字
+LF=$( printf '\177')  # 改行(タグ内の引用符外は除く)のエスケープ用文字
 
 T=$( printf '\011')             # タブ(エスケープ用ではない)
 N=$( printf '\\\012_');N=${N%_} # sedコマンド用の改行(エスケープ用ではない)
@@ -470,3 +474,6 @@ else                                                                           #
   cat                                                                          #
 fi                                                                             |
 sed 's/'"$LF"'/'"$optlf"'/g'
+
+set -x
+exec 2>/dev/stderr

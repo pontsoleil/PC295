@@ -1,0 +1,53 @@
+ https://worklog.be/archives/3230
+# yum -y install --enablerepo=epel spawn-fcgi fcgi-devel
+# yum install git-core build-essential libfcgi-dev autoconf libtool automake
+# cd /usr/local/src
+# git clone git://github.com/gnosek/fcgiwrap.git
+  884  cd fcgiwrap
+  885  autoreconf -i
+  886  ./configure
+  887  make
+Error -> Fix add line  break;
+  892  vi fcgiwrap.c
+  893  make
+  895  make install
+
+# vi /etc/sysconfig/spawn-fcgi
+add following line
+OPTIONS="-u nginx -g nginx -a 127.0.0.1 -p 9001 -P /var/run/spawn-fcgi.pid -- /usr/local/sbin/fcgiwrap"
+
+# chkconfig spawn-fcgi on
+# mkdir /var/run/fcgiwrap
+
+# vi /etc/sysconfig/fcgiwrap
+FCGI_USER=nginx
+FCGI_GROUP=nginx
+FCGI_PROGRAM=/usr/local/sbin/fcgiwrap
+FCGI_PID=/var/run/fcgiwrap/spawn-fcgi.pid
+FCGI_SOCKET=/var/run/fcgiwrap/fcgiwrap.sock
+FCGI_EXTRA_OPTIONS="-M 0700"
+OPTIONS="-u $FCGI_USER -g $FCGI_GROUP -s $FCGI_SOCKET -S $FCGI_EXTRA_OPTIONS -F 1 -P $FCGI_PID -- $FCGI_PROGRAM"
+
+# vi /etc/init.d/spawn-fcgi
+23-exec="/usr/bin/spawn-fcgi"
+24-prog="spawn-fcgi"
+25-config="/etc/sysconfig/spawn-fcgi"
+ 
+27+exec="/usr/bin/spawn-fcgi"
+28+cgi="/usr/sbin/fcgiwrap"
+29+prog=`basename $cgi`
+30+config="/etc/sysconfig/$prog"
+31+pid="/var/run/fcgiwrap/spawn-fcgi.pid"
+32+SOCKET="/var/run/fcgiwrap/fcgiwrap.sock"
+
+53-killproc $prog
+54+killproc -p $pid $prog
+
+# vi /etc/nginx/s*e/wuwei.space
+add following
+location ~ \.cgi$ {
+  fastcgi_pass  unix:/var/run/fcgiwrap/fcgiwrap.sock;
+  fastcgi_index index.cgi;
+  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  include /etc/nginx/fastcgi_params;
+}
