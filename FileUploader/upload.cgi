@@ -23,6 +23,11 @@ filename=$(mime-read -v $Tmp-cgivars                                       | # t
   head -n 1                                                                | # tee log/${0##*/}.$$.step4.log |
   sed 's/.*[[:blank:]]filename="\([^"]*\)".*/\1/'                          | # tee log/${0##*/}.$$.step5.log |
   tr '/"' '--'                                                             )
+content-type=$(mime-read -v $Tmp-cgivars                                   | # tee log/${0##*/}.$$.step6.log |
+  grep -Ei '^[0-9]+[[:blank:]]*Content-Type:'                              | # tee log/${0##*/}.$$.step7.log |
+  head -n 1                                                                | # tee log/${0##*/}.$$.step8.log |
+  sed 's/.*[[:blank:]]*Content-Type:[[:blank:]]*\([[:blank:]]*\)/\1/'      | # tee log/${0##*/}.$$.step9.log |
+  tr '/"' '--'                                                             )
 fullname=$(mime-read fullname $Tmp-cgivars)
 
 cp $Tmp-photofile $filename
@@ -33,7 +38,7 @@ Content-Type: text/html
 <html>
 <head><title>Test</title></head>
 <body>
-<h1>Hello $fullname!</h1>
+<h1>Hello $fullname! ($content-type)</h1>
 <img src="$filename" alt="$filename">
 </body>
 </html>
